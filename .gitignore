@@ -1,12 +1,6 @@
+# Dependencies
 node_modules/
-.next/
-out/
+
+# Build artifacts
 dist/
-.env
-.env.*
-!.env.example
-.neon
-*.log
-*.tsbuildinfo
-.DS_Store
-coverage/
+build/

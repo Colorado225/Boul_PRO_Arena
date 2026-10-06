@@ -47,6 +47,62 @@ enum SaleStatus {
   REFUNDED
 }
 
+enum UnitSystem {
+  MASS
+  VOLUME
+  LENGTH
+  COUNT
+}
+
+enum PriceMode {
+  FIFO
+  LIFO
+  CMP
+}
+
+enum ProductCategory {
+  BREAD
+  PASTRY
+  SANDWICH
+  BEVERAGE
+  OTHER
+}
+
+enum DiscountType {
+  AMOUNT
+  PERCENT
+}
+
+enum RegisterMovementType {
+  OPENING_FUND
+  SALE_CASH_IN
+  EXPENSE
+  WITHDRAWAL
+  DEPOSIT
+  CLOSING
+}
+
+enum CashMovementDirection {
+  IN
+  OUT
+}
+
+enum PaymentMethod {
+  CASH
+  MOBILE_MONEY
+  CARD
+  TRANSFER
+  CREDIT
+}
+
+enum WasteReason {
+  UNSOLD
+  EXPIRED
+  PRODUCTION_ERROR
+  BREAKAGE
+  OTHER
+}
+
 model Organization {
   id        String    @id @default(uuid()) @db.Uuid
   name      String
@@ -61,11 +117,26 @@ model Organization {
   products   Product[]
   materials  RawMaterial[]
   suppliers  Supplier[]
-  sales      Sale[]
-  movements  StockMovement[]
-  auditLogs  AuditLog[]
-  sessions   Session[]
+  sales       Sale[]
+  movements   StockMovement[]
+  auditLogs   AuditLog[]
+  sessions    Session[]
   invitations UserInvitation[]
+
+  units            Unit[]
+  categories       ProductCategoryRef[]
+  customers        Customer[]
+  registers        CashRegister[]
+  recipe           Recipe[]
+  production       ProductionRun[]
+  waste            WasteRecord[]
+  purchaseOrders   PurchaseOrder[]
+  supplierPrices   SupplierPrice[]
+  budgets          Budget[]
+  costCenters      CostCenter[]
+  expenses         Expense[]
+  accounts         AccountingAccount[]
+  journal          JournalEntry[]
 }
 
 model User {
@@ -106,6 +177,47 @@ model Site {
   movements    StockMovement[]
   userAccesses UserSiteAccess[]
 
+  registers      CashRegister[]
+  productionRuns ProductionRun[]
+  wasteRecords   WasteRecord[]
+  stocktakings   Stocktaking[]
+  budgets        Budget[]
+
+  @@index([organizationId])
+}
+
+model Unit {
+  id             String     @id @default(uuid()) @db.Uuid
+  organizationId String     @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  name           String
+  code           String
+  system         UnitSystem
+  baseInOrgUnit  Boolean    @default(true)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  deletedAt      DateTime?
+
+  materials RawMaterialUnit[]
+  products  ProductUnit[]
+  lines     RecipeLine[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId])
+}
+
+model ProductCategoryRef {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  name           String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  deletedAt      DateTime?
+
+  products Product[]
+
+  @@unique([organizationId, name])
   @@index([organizationId])
 }
 
@@ -115,17 +227,37 @@ model Product {
   organization   Organization @relation(fields: [organizationId], references: [id])
   sku            String
   name           String
-  salePrice      Int
-  costPrice      Int          @default(0)
+  barcode        String?
+  categoryId     String?      @db.Uuid
+  category       ProductCategoryRef? @relation(fields: [categoryId], references: [id])
+  salePrice      Decimal      @db.Decimal(18, 6)
+  costPrice      Decimal      @default(0) @db.Decimal(18, 6)
+  costMode       PriceMode    @default(CMP)
+  isTrackable    Boolean      @default(true)
   isActive       Boolean      @default(true)
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
   deletedAt      DateTime?
 
   lines SaleLine[]
+  units ProductUnit[]
+  recipes Recipe[]
 
   @@unique([organizationId, sku])
   @@index([organizationId])
+  @@index([organizationId, categoryId])
+}
+
+model ProductUnit {
+  id         String  @id @default(uuid()) @db.Uuid
+  productId  String  @db.Uuid
+  product    Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  unitId     String  @db.Uuid
+  unit       Unit    @relation(fields: [unitId], references: [id])
+  quantityPerUnit Decimal @default(1) @db.Decimal(18, 6)
+
+  @@unique([productId, unitId])
+  @@index([unitId])
 }
 
 model RawMaterial {
@@ -135,17 +267,56 @@ model RawMaterial {
   sku            String
   name           String
   baseUnit       String
+  baseUnitId     String?      @db.Uuid
+  supplierId     String?      @db.Uuid
+  supplier       Supplier?    @relation(fields: [supplierId], references: [id])
+  priceMode      PriceMode    @default(CMP)
   quantity       Decimal      @default(0) @db.Decimal(18, 6)
   averageCost    Decimal      @default(0) @db.Decimal(18, 6)
   minimumStock   Decimal      @default(0) @db.Decimal(18, 6)
+  shelfLifeDays  Int?
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
   deletedAt      DateTime?
 
   movements StockMovement[]
+  layers    InventoryLayer[]
+  units     RawMaterialUnit[]
+  recipeLines RecipeLine[]
+  purchaseLines PurchaseOrderLine[]
 
   @@unique([organizationId, sku])
   @@index([organizationId])
+  @@index([organizationId, supplierId])
+}
+
+model RawMaterialUnit {
+  id          String      @id @default(uuid()) @db.Uuid
+  materialId  String      @db.Uuid
+  material    RawMaterial @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  unitId      String      @db.Uuid
+  unit        Unit        @relation(fields: [unitId], references: [id])
+  toBaseRatio Decimal     @db.Decimal(18, 6)
+
+  @@unique([materialId, unitId])
+  @@index([unitId])
+}
+
+model InventoryLayer {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  siteId         String       @db.Uuid
+  materialId     String       @db.Uuid
+  material       RawMaterial  @relation(fields: [materialId], references: [id])
+  quantity       Decimal      @db.Decimal(18, 6)
+  unitCost       Decimal      @db.Decimal(18, 6)
+  sourceType     MovementType
+  sourceId       String       @db.Uuid
+  occurredAt     DateTime
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([organizationId, siteId, materialId, occurredAt])
 }
 
 model Supplier {
@@ -155,11 +326,374 @@ model Supplier {
   name           String
   phone          String?
   email          String?
+  paymentTerms   String?
+  leadTimeDays   Int?
+  rating         Decimal?     @db.Decimal(4, 2)
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
   deletedAt      DateTime?
 
+  materials RawMaterial[]
+  prices    SupplierPrice[]
+  orders    PurchaseOrder[]
+
   @@index([organizationId])
+}
+
+model SupplierPrice {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  supplierId     String       @db.Uuid
+  supplier       Supplier     @relation(fields: [supplierId], references: [id])
+  materialId     String       @db.Uuid
+  unitPrice      Decimal      @db.Decimal(18, 6)
+  currency       String       @default("XOF")
+  effectiveFrom  DateTime
+  notes          String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([organizationId, materialId, effectiveFrom])
+  @@index([supplierId, materialId])
+}
+
+model PurchaseOrder {
+  id             String        @id @default(uuid()) @db.Uuid
+  organizationId String        @db.Uuid
+  organization   Organization  @relation(fields: [organizationId], references: [id])
+  reference      String
+  supplierId     String        @db.Uuid
+  supplier       Supplier      @relation(fields: [supplierId], references: [id])
+  siteId         String        @db.Uuid
+  status         String        @default("DRAFT")
+  expectedAt     DateTime?
+  total          Decimal       @default(0) @db.Decimal(18, 6)
+  createdBy      String        @db.Uuid
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  deletedAt      DateTime?
+
+  lines PurchaseOrderLine[]
+
+  @@unique([organizationId, reference])
+  @@index([organizationId, status])
+}
+
+model PurchaseOrderLine {
+  id              String       @id @default(uuid()) @db.Uuid
+  orderId         String       @db.Uuid
+  order           PurchaseOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  materialId      String       @db.Uuid
+  material        RawMaterial  @relation(fields: [materialId], references: [id])
+  quantity        Decimal      @db.Decimal(18, 6)
+  receivedQuantity Decimal     @default(0) @db.Decimal(18, 6)
+  unitPrice       Decimal      @db.Decimal(18, 6)
+
+  @@index([orderId])
+  @@index([materialId])
+}
+
+model Stocktaking {
+  id             String      @id @default(uuid()) @db.Uuid
+  organizationId String      @db.Uuid
+  siteId         String      @db.Uuid
+  site           Site        @relation(fields: [siteId], references: [id])
+  status         String      @default("OPEN")
+  startedBy      String      @db.Uuid
+  countedAt      DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  lines StocktakingLine[]
+
+  @@index([organizationId, siteId, createdAt])
+}
+
+model StocktakingLine {
+  id           String      @id @default(uuid()) @db.Uuid
+  stocktakingId String     @db.Uuid
+  stocktaking  Stocktaking @relation(fields: [stocktakingId], references: [id], onDelete: Cascade)
+  materialId   String      @db.Uuid
+  systemQty    Decimal     @db.Decimal(18, 6)
+  countedQty   Decimal?    @db.Decimal(18, 6)
+
+  @@index([stocktakingId])
+}
+
+model Customer {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  name           String
+  phone          String?
+  email          String?
+  address        String?
+  creditLimit    Decimal      @default(0) @db.Decimal(18, 6)
+  balance        Decimal      @default(0) @db.Decimal(18, 6)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  deletedAt      DateTime?
+
+  sales Sale[]
+
+  @@index([organizationId])
+  @@index([organizationId, phone])
+}
+
+model CashRegister {
+  id             String        @id @default(uuid()) @db.Uuid
+  organizationId String        @db.Uuid
+  organization   Organization  @relation(fields: [organizationId], references: [id])
+  siteId         String        @db.Uuid
+  site           Site          @relation(fields: [siteId], references: [id])
+  name           String
+  status         String        @default("CLOSED")
+  openedAt       DateTime?
+  closedAt       DateTime?
+  openingBalance Decimal       @default(0) @db.Decimal(18, 6)
+  expectedBalance Decimal      @default(0) @db.Decimal(18, 6)
+  countedBalance  Decimal?     @db.Decimal(18, 6)
+  variance       Decimal?      @db.Decimal(18, 6)
+  openedBy       String?       @db.Uuid
+  closedBy       String?       @db.Uuid
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  movements RegisterMovement[]
+  sales     Sale[]
+
+  @@index([organizationId, siteId, status])
+}
+
+model RegisterMovement {
+  id          String                @id @default(uuid()) @db.Uuid
+  registerId  String                @db.Uuid
+  register    CashRegister          @relation(fields: [registerId], references: [id], onDelete: Cascade)
+  type        RegisterMovementType
+  direction   CashMovementDirection
+  amount      Decimal               @db.Decimal(18, 6)
+  method      PaymentMethod?
+  note        String?
+  referenceId String?               @db.Uuid
+  createdBy   String                @db.Uuid
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+
+  @@index([registerId, createdAt])
+}
+
+model Recipe {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  productId      String       @db.Uuid
+  product        Product      @relation(fields: [productId], references: [id])
+  name           String
+  yieldQuantity  Decimal      @db.Decimal(18, 6)
+  yieldUnitId    String?      @db.Uuid
+  lossRatePct    Decimal      @default(0) @db.Decimal(6, 3)
+  version        Int          @default(1)
+  isActive       Boolean      @default(true)
+  createdBy      String       @db.Uuid
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  deletedAt      DateTime?
+
+  lines RecipeLine[]
+
+  @@index([organizationId, productId])
+}
+
+model RecipeLine {
+  id          String      @id @default(uuid()) @db.Uuid
+  recipeId    String      @db.Uuid
+  recipe      Recipe      @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  materialId  String      @db.Uuid
+  material    RawMaterial @relation(fields: [materialId], references: [id])
+  unitId      String?     @db.Uuid
+  unit        Unit?       @relation(fields: [unitId], references: [id])
+  quantity    Decimal     @db.Decimal(18, 6)
+  wastagePct  Decimal     @default(0) @db.Decimal(6, 3)
+
+  @@index([recipeId])
+  @@index([materialId])
+}
+
+model ProductionRun {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  siteId         String       @db.Uuid
+  site           Site         @relation(fields: [siteId], references: [id])
+  recipeId       String       @db.Uuid
+  reference      String
+  status         String       @default("PLANNED")
+  plannedQty     Decimal      @db.Decimal(18, 6)
+  producedQty    Decimal      @default(0) @db.Decimal(18, 6)
+  wasteQty       Decimal      @default(0) @db.Decimal(18, 6)
+  materialCost   Decimal      @default(0) @db.Decimal(18, 6)
+  laborCost      Decimal      @default(0) @db.Decimal(18, 6)
+  energyCost     Decimal      @default(0) @db.Decimal(18, 6)
+  overheadCost   Decimal      @default(0) @db.Decimal(18, 6)
+  totalCost      Decimal      @default(0) @db.Decimal(18, 6)
+  unitCost       Decimal      @default(0) @db.Decimal(18, 6)
+  shiftDate      DateTime     @db.Date
+  createdBy      String       @db.Uuid
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  deletedAt      DateTime?
+
+  consumption ProductionConsumption[]
+
+  @@unique([organizationId, reference])
+  @@index([organizationId, siteId, shiftDate])
+}
+
+model ProductionConsumption {
+  id         String        @id @default(uuid()) @db.Uuid
+  runId      String        @db.Uuid
+  run        ProductionRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  materialId String        @db.Uuid
+  quantity   Decimal       @db.Decimal(18, 6)
+  unitCost   Decimal       @db.Decimal(18, 6)
+
+  @@index([runId])
+  @@index([materialId])
+}
+
+model WasteRecord {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  siteId         String       @db.Uuid
+  site           Site         @relation(fields: [siteId], references: [id])
+  reason         WasteReason
+  productId      String?      @db.Uuid
+  materialId     String?      @db.Uuid
+  quantity       Decimal      @db.Decimal(18, 6)
+  costValue      Decimal      @db.Decimal(18, 6)
+  occurredOn     DateTime     @db.Date
+  note           String?
+  createdBy      String       @db.Uuid
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([organizationId, siteId, occurredOn])
+}
+
+model Expense {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  siteId         String?      @db.Uuid
+  costCenterId   String?      @db.Uuid
+  costCenter     CostCenter?  @relation(fields: [costCenterId], references: [id])
+  accountId      String?      @db.Uuid
+  account        AccountingAccount? @relation(fields: [accountId], references: [id])
+  label          String
+  category       String
+  amount         Decimal      @db.Decimal(18, 6)
+  paidOn         DateTime     @db.Date
+  paymentMethod  PaymentMethod?
+  documentUrl    String?
+  createdBy      String       @db.Uuid
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  deletedAt      DateTime?
+
+  @@index([organizationId, paidOn])
+  @@index([organizationId, costCenterId])
+}
+
+model CostCenter {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  name           String
+  code           String
+  type           String
+  allocationBasis String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  deletedAt      DateTime?
+
+  expenses Expense[]
+  budgets  Budget[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId])
+}
+
+model AccountingAccount {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  code           String
+  name           String
+  type           String
+  parentCode     String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  deletedAt      DateTime?
+
+  expenses Expense[]
+  lines    JournalLine[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId])
+}
+
+model JournalEntry {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  reference      String
+  description    String
+  entryDate      DateTime     @db.Date
+  period         String
+  postedBy       String       @db.Uuid
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  lines JournalLine[]
+
+  @@unique([organizationId, reference])
+  @@index([organizationId, entryDate])
+}
+
+model JournalLine {
+  id        String             @id @default(uuid()) @db.Uuid
+  entryId   String             @db.Uuid
+  entry     JournalEntry       @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  accountId String             @db.Uuid
+  account   AccountingAccount  @relation(fields: [accountId], references: [id])
+  debit     Decimal            @default(0) @db.Decimal(18, 6)
+  credit    Decimal            @default(0) @db.Decimal(18, 6)
+  note      String?
+
+  @@index([entryId])
+  @@index([accountId])
+}
+
+model Budget {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  siteId         String?      @db.Uuid
+  site           Site?        @relation(fields: [siteId], references: [id])
+  costCenterId   String?      @db.Uuid
+  costCenter     CostCenter?  @relation(fields: [costCenterId], references: [id])
+  period         String
+  category       String
+  plannedAmount  Decimal      @db.Decimal(18, 6)
+  actualAmount   Decimal      @default(0) @db.Decimal(18, 6)
+  createdBy      String       @db.Uuid
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([organizationId, period, category, siteId, costCenterId])
+  @@index([organizationId, period])
 }
 
 model Sale {
@@ -168,9 +702,22 @@ model Sale {
   organization   Organization @relation(fields: [organizationId], references: [id])
   siteId         String       @db.Uuid
   site           Site         @relation(fields: [siteId], references: [id])
+  registerId     String?      @db.Uuid
+  register       CashRegister? @relation(fields: [registerId], references: [id])
+  customerId     String?      @db.Uuid
+  customer       Customer?    @relation(fields: [customerId], references: [id])
   status         SaleStatus   @default(COMPLETED)
-  total          Int
+  subtotal       Decimal      @db.Decimal(18, 6)
+  discountType   DiscountType?
+  discountValue  Decimal      @default(0) @db.Decimal(18, 6)
+  total          Decimal      @db.Decimal(18, 6)
+  costTotal      Decimal      @default(0) @db.Decimal(18, 6)
   paymentMethod  String
+  payments       Json?
+  note           String?
+  voidReason     String?
+  voidedBy       String?      @db.Uuid
+  voidedAt       DateTime?
   idempotencyKey String       @unique
   createdBy      String       @db.Uuid
   createdAt      DateTime     @default(now())
@@ -180,6 +727,7 @@ model Sale {
 
   @@index([organizationId, createdAt])
   @@index([organizationId, siteId, createdAt])
+  @@index([organizationId, customerId])
 }
 
 model SaleLine {
@@ -189,8 +737,10 @@ model SaleLine {
   productId String   @db.Uuid
   product   Product  @relation(fields: [productId], references: [id])
   quantity  Decimal  @db.Decimal(18, 6)
-  unitPrice Int
-  unitCost  Int
+  unitPrice Decimal  @db.Decimal(18, 6)
+  unitCost  Decimal  @db.Decimal(18, 6)
+  discount  Decimal  @default(0) @db.Decimal(18, 6)
+  lineTotal Decimal  @db.Decimal(18, 6)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

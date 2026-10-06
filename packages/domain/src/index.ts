@@ -1,4 +1,6 @@
 export * from './access-control.js';
+export * from './money.js';
+export * from './financial-engine.js';
 
 /** Shared domain contracts. No framework or infrastructure dependency is allowed here. */
 export type TenantId=string;
