@@ -17,9 +17,14 @@
   "dependencies": {
     "@boul/domain": "*",
     "@nestjs/common": "^11.1.6",
-    "@prisma/client": "^6.19.0",
     "@nestjs/core": "^11.1.6",
     "@nestjs/platform-express": "^11.1.6",
+    "@nestjs/throttler": "^6.4.0",
+    "@prisma/client": "^6.19.0",
+    "argon2": "^0.44.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.2",
+    "cookie-parser": "^1.4.7",
     "dotenv": "^17.2.3",
     "reflect-metadata": "latest",
     "rxjs": "latest"
@@ -27,6 +32,8 @@
   "devDependencies": {
     "@boul/config": "*",
     "@nestjs/cli": "^11.0.10",
+    "@types/cookie-parser": "^1.4.9",
+    "@types/express": "^5.0.3",
     "@types/node": "latest",
     "prisma": "^6.19.0",
     "tsx": "^4.20.6",

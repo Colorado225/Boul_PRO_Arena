@@ -41,8 +41,8 @@ Une tranche est terminée uniquement si :
 **Objectif :** rendre le dépôt déployable et sécurisé avant d’accumuler les fonctionnalités.
 
 - [x] P0.1 Monorepo : `apps/web`, `apps/api`, packages `ui`, `domain`, `config`.
-- [ ] P0.2 Neon PostgreSQL, Prisma, migration initiale et seed versionné — **en cours, connexion préparée**.
-- [ ] P0.3 Authentification, sessions sécurisées, récupération de compte.
+- [ ] P0.2 Neon PostgreSQL, Prisma, migration initiale et seed versionné — **bloqué uniquement par l’ajout local des URL Neon**.
+- [ ] P0.3 Authentification, sessions sécurisées, récupération de compte — **en cours : API, sessions et écran de connexion créés**.
 - [ ] P0.4 Organisation, boutique, utilisateurs, RBAC par ressource.
 - [ ] P0.5 OpenAPI, gestion d’erreurs, logs structurés, health checks.
 - [ ] P0.6 CI : lint, types, tests, build, audit dépendances.
