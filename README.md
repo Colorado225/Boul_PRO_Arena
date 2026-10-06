@@ -37,7 +37,7 @@ Les règles de dépendance sont consignées dans `docs/ADR-001-MONOREPO.md`. La 
 - OpenAPI, erreurs `problem+json`, logs structurés avec corrélation et contrôles live/ready ;
 - CI GitHub : Prisma, lint, types, tests, builds, audit critique et mises à jour Dependabot ;
 - images OCI Web/API, validation stricte des environnements et sauvegardes Neon chiffrées vers S3 ;
-- catalogue matières/catégories et moteur exact d’unités, y compris les emballages spécifiques (`1 sac de farine = 50 kg`).
+- interface matières/catégories reliée à l’API et moteur exact d’unités, y compris les emballages spécifiques (`1 sac de farine = 50 kg`).
 
 ## Important
 Les données visibles sont celles de **Boulangerie Excellence — Démo**. Elles servent au seed de démonstration demandé et ne sont pas présentées comme réelles. Le prochain incrément branche les écrans sur PostgreSQL/NestJS, ajoute l’authentification multi-tenant et remplace la persistance locale du POS par la file offline idempotente.

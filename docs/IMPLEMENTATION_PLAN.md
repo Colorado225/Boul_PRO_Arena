@@ -54,7 +54,7 @@ Une tranche est terminée uniquement si :
 **Objectif :** répondre « combien me coûte réellement ce produit aujourd’hui ? »
 
 #### Tranche 1A — Matières, unités et achats
-- [ ] Catalogue matières et catégories — **API, schéma, permissions et seed créés ; interface à brancher**.
+- [x] Catalogue matières et catégories — API, interface, permissions et seed.
 - [x] Moteur d’unités/conversions exactes.
 - [ ] Fournisseurs, commande et réception.
 - [ ] Lots, dates, historique des prix et mouvement de stock immuable.
