@@ -7,5 +7,7 @@ export interface AuthPrincipal{
   name:string;
   email:string;
   role:Role;
+  siteIds:string[];
+  unrestrictedSites:boolean;
   sessionId:string;
 }

@@ -1,1 +1,1 @@
-{"extends":"@boul/config/typescript/base.json","include":["src/**/*.ts"]}
+{"extends":"@boul/config/typescript/base.json","compilerOptions":{"types":["node"]},"include":["src/**/*.ts"]}

@@ -9,8 +9,8 @@
   "scripts": {
     "dev": "npm run dev -w @boul/web",
     "dev:web": "npm run dev -w @boul/web",
-    "dev:api": "npm run dev -w @boul/api",
-    "build": "npm run build -ws --if-present",
+    "dev:api": "npm run build -w @boul/domain && npm run dev -w @boul/api",
+    "build": "npm run build -w @boul/domain && npm run build -w @boul/api && npm run build -w @boul/web",
     "typecheck": "npm run typecheck -ws --if-present",
     "test": "npm run test -ws --if-present",
     "lint": "npm run lint -ws --if-present",

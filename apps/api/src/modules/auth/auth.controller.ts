@@ -7,6 +7,7 @@ import {SESSION_COOKIE,SESSION_DURATION_MS} from './auth.constants.js';
 import {LoginDto} from './dto/login.dto.js';
 import {RequestPasswordResetDto} from './dto/request-password-reset.dto.js';
 import {ResetPasswordDto} from './dto/reset-password.dto.js';
+import {AcceptInvitationDto} from './dto/accept-invitation.dto.js';
 
 @Controller('auth')
 export class AuthController{
@@ -27,6 +28,9 @@ export class AuthController{
     await this.auth.logout(req.cookies?.[SESSION_COOKIE]);
     res.clearCookie(SESSION_COOKIE,{path:'/'});
   }
+
+  @Post('accept-invitation') @HttpCode(201) @Throttle({default:{limit:5,ttl:60_000}})
+  acceptInvitation(@Body() body:AcceptInvitationDto){return this.auth.acceptInvitation(body)}
 
   @Post('request-password-reset') @HttpCode(202) @Throttle({default:{limit:3,ttl:60_000}})
   requestReset(@Body() body:RequestPasswordResetDto){return this.auth.requestPasswordReset(body)}

@@ -32,7 +32,8 @@ Les règles de dépendance sont consignées dans `docs/ADR-001-MONOREPO.md`. La 
 - PWA manifest ;
 - architecture cible et schéma Prisma initial ;
 - plan d’implémentation interactif avec phases, dépendances, statuts et progression persistante (`docs/IMPLEMENTATION_PLAN.md`) ;
-- authentification par session opaque, cookies sécurisés, limitation de débit et écran `/connexion`.
+- authentification par session opaque, cookies sécurisés, limitation de débit et écran `/connexion` ;
+- RBAC métier, périmètres par boutique, invitations sécurisées et écran « Équipe & accès ».
 
 ## Important
 Les données visibles sont celles de **Boulangerie Excellence — Démo**. Elles servent au seed de démonstration demandé et ne sont pas présentées comme réelles. Le prochain incrément branche les écrans sur PostgreSQL/NestJS, ajoute l’authentification multi-tenant et remplace la persistance locale du POS par la file offline idempotente.

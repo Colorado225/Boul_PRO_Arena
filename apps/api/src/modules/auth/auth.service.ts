@@ -7,6 +7,7 @@ import type {AuthPrincipal} from './auth.types.js';
 import type {LoginDto} from './dto/login.dto.js';
 import type {RequestPasswordResetDto} from './dto/request-password-reset.dto.js';
 import type {ResetPasswordDto} from './dto/reset-password.dto.js';
+import type {AcceptInvitationDto} from './dto/accept-invitation.dto.js';
 
 const digest=(token:string)=>createHash('sha256').update(token).digest('hex');
 
@@ -19,7 +20,7 @@ export class AuthService{
     const email=input.email.trim().toLowerCase();
     const user=await this.prisma.user.findFirst({
       where:{email,deletedAt:null,organization:{slug:input.organizationSlug,deletedAt:null}},
-      include:{organization:true},
+      include:{organization:true,siteAccesses:true},
     });
     const passwordHash=user?.passwordHash ?? await this.dummyHash;
     const valid=await verify(passwordHash,input.password);
@@ -37,7 +38,7 @@ export class AuthService{
   }
 
   async authenticate(token:string):Promise<AuthPrincipal|null>{
-    const session=await this.prisma.session.findUnique({where:{tokenHash:digest(token)},include:{user:{include:{organization:true}}}});
+    const session=await this.prisma.session.findUnique({where:{tokenHash:digest(token)},include:{user:{include:{organization:true,siteAccesses:true}}}});
     if(!session||session.revokedAt||session.expiresAt<=new Date()||!session.user.isActive||session.user.deletedAt)return null;
     const now=new Date();
     if(now.getTime()-session.lastSeenAt.getTime()>5*60*1000)void this.prisma.session.update({where:{id:session.id},data:{lastSeenAt:now}}).catch(()=>undefined);
@@ -58,6 +59,19 @@ export class AuthService{
     return {accepted:true,...(process.env.NODE_ENV==='development'?{debugToken:token}:{})};
   }
 
+  async acceptInvitation(input:AcceptInvitationDto){
+    const invitation=await this.prisma.userInvitation.findUnique({where:{tokenHash:digest(input.token)}});
+    if(!invitation||invitation.acceptedAt||invitation.revokedAt||invitation.expiresAt<=new Date())throw new UnauthorizedException('Invitation invalide ou expirée');
+    const passwordHash=await hash(input.password);
+    const user=await this.prisma.$transaction(async tx=>{
+      const created=await tx.user.create({data:{organizationId:invitation.organizationId,name:invitation.name,email:invitation.email,passwordHash,role:invitation.role,siteAccesses:{create:invitation.siteIds.map(siteId=>({siteId}))}}});
+      await tx.userInvitation.update({where:{id:invitation.id},data:{acceptedAt:new Date()}});
+      await tx.auditLog.create({data:{organizationId:invitation.organizationId,actorId:created.id,action:'USER_INVITATION_ACCEPTED',entity:'User',entityId:created.id}});
+      return created;
+    });
+    return {created:true,userId:user.id};
+  }
+
   async resetPassword(input:ResetPasswordDto){
     const reset=await this.prisma.passwordResetToken.findUnique({where:{tokenHash:digest(input.token)}});
     if(!reset||reset.usedAt||reset.expiresAt<=new Date())throw new UnauthorizedException('Lien invalide ou expiré');
@@ -70,7 +84,8 @@ export class AuthService{
     return {updated:true};
   }
 
-  private toPrincipal(user:{id:string;organizationId:string;name:string;email:string;role:any;organization:{slug:string}},sessionId:string):AuthPrincipal{
-    return {userId:user.id,organizationId:user.organizationId,organizationSlug:user.organization.slug,name:user.name,email:user.email,role:user.role,sessionId};
+  private toPrincipal(user:{id:string;organizationId:string;name:string;email:string;role:any;organization:{slug:string};siteAccesses:{siteId:string}[]},sessionId:string):AuthPrincipal{
+    const unrestrictedSites=['SUPER_ADMIN','OWNER','DIRECTOR','GENERAL_MANAGER'].includes(user.role);
+    return {userId:user.id,organizationId:user.organizationId,organizationSlug:user.organization.slug,name:user.name,email:user.email,role:user.role,siteIds:user.siteAccesses.map(access=>access.siteId),unrestrictedSites,sessionId};
   }
 }
