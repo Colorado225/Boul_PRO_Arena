@@ -1,0 +1,37 @@
+name: Deploy Neon configuration
+
+on:
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: "22.23.0"
+
+jobs:
+  deploy:
+    name: Deploy to Neon production
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate project
+        run: |
+          npm run typecheck
+          npm run build
+
+      - name: Deploy Neon configuration
+        run: npm run neon:deploy
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
