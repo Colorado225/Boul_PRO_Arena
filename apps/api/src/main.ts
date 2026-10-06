@@ -7,17 +7,20 @@ import cookieParser from 'cookie-parser';
 import {Logger} from 'nestjs-pino';
 import {AppModule} from './app.module.js';
 import {AllExceptionsFilter} from './infrastructure/http/all-exceptions.filter.js';
+import {validateEnvironment} from './infrastructure/config/environment.js';
 
 async function bootstrap(){
+  const env=validateEnvironment();
   const app=await NestFactory.create(AppModule,{cors:false,bufferLogs:true});
   app.useLogger(app.get(Logger));
   app.setGlobalPrefix('api/v1');
   app.use(cookieParser());
+  app.getHttpAdapter().getInstance().set('trust proxy',1);
   app.useGlobalPipes(new ValidationPipe({whitelist:true,forbidNonWhitelisted:true,transform:true}));
   app.useGlobalFilters(new AllExceptionsFilter());
   app.enableShutdownHooks();
 
-  if(process.env.OPENAPI_ENABLED!=='false'){
+  if(env.OPENAPI_ENABLED!=='false'){
     const config=new DocumentBuilder()
       .setTitle('Boul. Business OS API')
       .setDescription('API multi-tenant de pilotage des boulangeries ivoiriennes.')
@@ -31,7 +34,6 @@ async function bootstrap(){
     SwaggerModule.setup('api/docs',app,document,{jsonDocumentUrl:'api/docs-json',customSiteTitle:'Boul. API'});
   }
 
-  const port=Number(process.env.API_PORT??3001);
-  await app.listen(port,'0.0.0.0');
+  await app.listen(env.API_PORT,'0.0.0.0');
 }
 void bootstrap();

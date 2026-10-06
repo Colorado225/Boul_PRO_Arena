@@ -8,7 +8,7 @@ type Item={id:string;title:string;detail:string};
 type Phase={id:string;kicker:string;title:string;goal:string;value:string;color:string;items:Item[]};
 const phases:Phase[]=[
 {id:'P0',kicker:'Fondations',title:'Un socle fiable',goal:'Sécuriser l’architecture avant d’accumuler les fonctionnalités.',value:'Une organisation isolée, authentifiée et déployable.',color:'#90b95b',items:[
-{id:'P0.1',title:'Monorepo et frontières modulaires',detail:'Web Next.js, API NestJS, packages UI, domaine et configuration.'},{id:'P0.2',title:'Neon PostgreSQL, Prisma et migrations',detail:'Connexions poolée/directe, schéma multi-tenant, seed et sauvegardes.'},{id:'P0.3',title:'Authentification et sessions',detail:'Connexion sécurisée, récupération et préparation 2FA.'},{id:'P0.4',title:'Organisation, sites et RBAC',detail:'Permissions par module, boutique, caisse et action.'},{id:'P0.5',title:'Qualité et observabilité',detail:'CI, tests, OpenAPI, logs, erreurs et health checks.'}]},
+{id:'P0.1',title:'Monorepo et frontières modulaires',detail:'Web Next.js, API NestJS, packages UI, domaine et configuration.'},{id:'P0.2',title:'Neon PostgreSQL, Prisma et migrations',detail:'Connexions poolée/directe, schéma multi-tenant et seed.'},{id:'P0.3',title:'Authentification et sessions',detail:'Connexion sécurisée, récupération et préparation 2FA.'},{id:'P0.4',title:'Organisation, sites et RBAC',detail:'Permissions par module, boutique, caisse et action.'},{id:'P0.5',title:'Contrat API et observabilité',detail:'OpenAPI, logs, erreurs structurées et health checks.'},{id:'P0.6',title:'CI qualité et sécurité',detail:'Lint, types, tests, builds, audit et Dependabot.'},{id:'P0.7',title:'Environnements et sauvegardes',detail:'Conteneurs, secrets, staging, production et restauration.'}]},
 {id:'P1',kicker:'Cœur produit',title:'La vérité du coût',goal:'Dire combien coûte réellement chaque produit, aujourd’hui.',value:'Coût unitaire traçable et impact d’une hausse de farine.',color:'#b7ef5b',items:[
 {id:'P1.1',title:'Matières, unités et conversions',detail:'Sacs, kilogrammes, litres et règles exactes configurables.'},{id:'P1.2',title:'Achats, fournisseurs et lots',detail:'Réception, prix, stock et coût moyen pondéré.'},{id:'P1.3',title:'Recettes versionnées',detail:'Rendement, pertes prévues, emballage, énergie et main-d’œuvre.'},{id:'P1.4',title:'Moteur de coût théorique',detail:'Decimal, arrondis testés, prix minimum et marge cible.'},{id:'P1.5',title:'Production et coût réel',detail:'Consommation réelle, sorties, écarts et explications.'}]},
 {id:'P2',kicker:'Opérations',title:'Vendre sans perdre',goal:'Relier chaque vente au stock, à la caisse et à la marge.',value:'Une vente offline synchronisée une seule fois.',color:'#f0c15c',items:[
@@ -26,7 +26,7 @@ const phases:Phase[]=[
 ];
 const statusMeta={todo:{label:'À faire',icon:Circle,cls:'bg-[#eef0eb] text-[#687169]'},doing:{label:'En cours',icon:Play,cls:'bg-[#e5f4c9] text-[#507718]'},blocked:{label:'Bloqué',icon:TriangleAlert,cls:'bg-[#ffe5db] text-[#a34d3c]'},done:{label:'Terminé',icon:Check,cls:'bg-[#dff1e6] text-[#367153]'}};
 const cycle:Status[]=['todo','doing','blocked','done'];
-const baseline:Record<string,Status>={'P0.1':'done','P0.2':'blocked','P0.3':'doing','P0.4':'doing','P0.5':'done','P0.6':'done'};
+const baseline:Record<string,Status>={'P0.1':'done','P0.2':'blocked','P0.3':'doing','P0.4':'doing','P0.5':'done','P0.6':'done','P0.7':'doing'};
 
 export function ImplementationRoadmap(){
  const [statuses,setStatuses]=useState<Record<string,Status>>(baseline);

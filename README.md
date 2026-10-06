@@ -35,7 +35,8 @@ Les règles de dépendance sont consignées dans `docs/ADR-001-MONOREPO.md`. La 
 - authentification par session opaque, cookies sécurisés, limitation de débit et écran `/connexion` ;
 - RBAC métier, périmètres par boutique, invitations sécurisées et écran « Équipe & accès » ;
 - OpenAPI, erreurs `problem+json`, logs structurés avec corrélation et contrôles live/ready ;
-- CI GitHub : Prisma, lint, types, tests, builds, audit critique et mises à jour Dependabot.
+- CI GitHub : Prisma, lint, types, tests, builds, audit critique et mises à jour Dependabot ;
+- images OCI Web/API, validation stricte des environnements et sauvegardes Neon chiffrées vers S3.
 
 ## Important
 Les données visibles sont celles de **Boulangerie Excellence — Démo**. Elles servent au seed de démonstration demandé et ne sont pas présentées comme réelles. Le prochain incrément branche les écrans sur PostgreSQL/NestJS, ajoute l’authentification multi-tenant et remplace la persistance locale du POS par la file offline idempotente.

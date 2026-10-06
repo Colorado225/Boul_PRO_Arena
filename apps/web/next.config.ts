@@ -1,5 +1,7 @@
 import type {NextConfig} from 'next';
 const nextConfig:NextConfig={
+  output:'standalone',
+  outputFileTracingRoot:new URL('../..',import.meta.url).pathname,
   allowedDevOrigins:['*.e2b.app'],
   transpilePackages:['@boul/ui','@boul/domain'],
   async rewrites(){
