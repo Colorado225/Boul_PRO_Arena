@@ -60,6 +60,23 @@ enum RecipeVersionStatus {
   ARCHIVED
 }
 
+enum PurchaseStatus {
+  ORDERED
+  PARTIALLY_RECEIVED
+  RECEIVED
+  CANCELLED
+}
+
+enum PurchasePaymentType {
+  CASH
+  CREDIT
+}
+
+enum ReceiptQualityStatus {
+  ACCEPTED
+  REJECTED
+}
+
 model Organization {
   id        String    @id @default(uuid()) @db.Uuid
   name      String
@@ -83,6 +100,8 @@ model Organization {
   unitConversions UnitConversion[]
   materialCategories MaterialCategory[]
   recipes      Recipe[]
+  purchases    PurchaseOrder[]
+  stockLots    StockLot[]
 }
 
 model User {
@@ -122,6 +141,8 @@ model Site {
   sales        Sale[]
   movements    StockMovement[]
   userAccesses UserSiteAccess[]
+  purchases    PurchaseOrder[]
+  stockLots    StockLot[]
 
   @@index([organizationId])
 }
@@ -180,6 +201,7 @@ model Unit {
   conversionsTo       UnitConversion[] @relation("ConversionToUnit")
   recipeIngredients   RecipeIngredient[]
   recipeYields        RecipeVersion[]
+  purchaseLines       PurchaseLine[]
 
   @@unique([organizationId, code])
   @@index([organizationId, dimension])
@@ -226,23 +248,120 @@ model RawMaterial {
   movements  StockMovement[]
   conversions       UnitConversion[]
   recipeIngredients RecipeIngredient[]
+  purchaseLines     PurchaseLine[]
+  stockLots         StockLot[]
 
   @@unique([organizationId, sku])
   @@index([organizationId])
 }
 
 model Supplier {
-  id             String       @id @default(uuid()) @db.Uuid
-  organizationId String       @db.Uuid
-  organization   Organization @relation(fields: [organizationId], references: [id])
-  name           String
-  phone          String?
-  email          String?
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-  deletedAt      DateTime?
+  id                String       @id @default(uuid()) @db.Uuid
+  organizationId    String       @db.Uuid
+  organization      Organization @relation(fields: [organizationId], references: [id])
+  code              String
+  name              String
+  contactName       String?
+  phone             String?
+  email             String?
+  address           String?
+  paymentTermsDays  Int          @default(0)
+  leadTimeDays      Int          @default(0)
+  notes             String?
+  isActive          Boolean      @default(true)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  deletedAt         DateTime?
 
-  @@index([organizationId])
+  purchases PurchaseOrder[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId, name])
+}
+
+model PurchaseOrder {
+  id               String              @id @default(uuid()) @db.Uuid
+  organizationId   String              @db.Uuid
+  organization     Organization        @relation(fields: [organizationId], references: [id])
+  siteId            String              @db.Uuid
+  site              Site                @relation(fields: [siteId], references: [id])
+  supplierId        String              @db.Uuid
+  supplier          Supplier            @relation(fields: [supplierId], references: [id])
+  reference         String
+  status            PurchaseStatus      @default(ORDERED)
+  paymentType       PurchasePaymentType @default(CASH)
+  orderedAt         DateTime             @default(now())
+  expectedAt        DateTime?
+  receivedAt        DateTime?
+  transportCost     Decimal              @default(0) @db.Decimal(18, 6)
+  taxCost           Decimal              @default(0) @db.Decimal(18, 6)
+  otherCost         Decimal              @default(0) @db.Decimal(18, 6)
+  subtotal          Decimal              @db.Decimal(18, 6)
+  total             Decimal              @db.Decimal(18, 6)
+  notes             String?
+  createdBy         String               @db.Uuid
+  receivedBy        String?              @db.Uuid
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+
+  lines PurchaseLine[]
+  lots  StockLot[]
+
+  @@unique([organizationId, reference])
+  @@index([organizationId, status, orderedAt])
+  @@index([supplierId, orderedAt])
+}
+
+model PurchaseLine {
+  id                    String        @id @default(uuid()) @db.Uuid
+  purchaseOrderId       String        @db.Uuid
+  purchaseOrder         PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  materialId            String        @db.Uuid
+  material              RawMaterial   @relation(fields: [materialId], references: [id])
+  orderedQuantity       Decimal       @db.Decimal(18, 6)
+  receivedQuantity      Decimal       @default(0) @db.Decimal(18, 6)
+  purchaseUnitId        String        @db.Uuid
+  purchaseUnit          Unit          @relation(fields: [purchaseUnitId], references: [id])
+  unitPrice             Decimal       @db.Decimal(18, 6)
+  lineSubtotal          Decimal       @db.Decimal(18, 6)
+  quantityInBaseUnit    Decimal       @default(0) @db.Decimal(18, 6)
+  landedCost            Decimal       @default(0) @db.Decimal(18, 6)
+  unitCostInBaseUnit    Decimal       @default(0) @db.Decimal(18, 6)
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  lots StockLot[]
+
+  @@unique([purchaseOrderId, materialId])
+  @@index([materialId, createdAt])
+}
+
+model StockLot {
+  id                  String               @id @default(uuid()) @db.Uuid
+  organizationId      String               @db.Uuid
+  organization        Organization         @relation(fields: [organizationId], references: [id])
+  siteId              String               @db.Uuid
+  site                Site                 @relation(fields: [siteId], references: [id])
+  materialId          String               @db.Uuid
+  material            RawMaterial          @relation(fields: [materialId], references: [id])
+  purchaseOrderId     String               @db.Uuid
+  purchaseOrder       PurchaseOrder        @relation(fields: [purchaseOrderId], references: [id])
+  purchaseLineId      String               @db.Uuid
+  purchaseLine        PurchaseLine         @relation(fields: [purchaseLineId], references: [id])
+  lotNumber           String
+  receivedQuantity    Decimal              @db.Decimal(18, 6)
+  remainingQuantity   Decimal              @db.Decimal(18, 6)
+  unitCost            Decimal              @db.Decimal(18, 6)
+  expiresAt           DateTime?
+  qualityStatus       ReceiptQualityStatus @default(ACCEPTED)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+
+  movements StockMovement[]
+
+  @@unique([organizationId, siteId, materialId, lotNumber])
+  @@index([organizationId, siteId, expiresAt])
+  @@index([materialId, createdAt])
 }
 
 model Recipe {
@@ -357,6 +476,8 @@ model StockMovement {
   site           Site         @relation(fields: [siteId], references: [id])
   materialId     String?      @db.Uuid
   material       RawMaterial? @relation(fields: [materialId], references: [id])
+  lotId          String?      @db.Uuid
+  lot             StockLot?   @relation(fields: [lotId], references: [id])
   type           MovementType
   quantity       Decimal      @db.Decimal(18, 6)
   unitCost       Decimal      @db.Decimal(18, 6)
@@ -368,6 +489,7 @@ model StockMovement {
 
   @@index([organizationId, siteId, createdAt])
   @@index([organizationId, materialId, createdAt])
+  @@index([lotId, createdAt])
   @@index([referenceType, referenceId])
 }
 

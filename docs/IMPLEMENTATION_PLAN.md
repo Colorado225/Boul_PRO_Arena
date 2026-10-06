@@ -56,9 +56,10 @@ Une tranche est terminée uniquement si :
 #### Tranche 1A — Matières, unités et achats
 - [x] Catalogue matières et catégories — API, interface, permissions et seed.
 - [x] Moteur d’unités/conversions exactes.
-- [ ] Fournisseurs, commande et réception.
-- [ ] Lots, dates, historique des prix et mouvement de stock immuable.
-- [ ] Coût moyen pondéré ; stratégie FIFO préparée.
+- [x] Fournisseurs, commandes, achats comptants/à crédit et réceptions partielles contrôlées.
+- [x] Lots, dates d’expiration, coûts rendus et mouvements d’entrée immuables.
+- [x] Coût moyen pondéré exact après chaque réception, frais annexes répartis et historique d’achat traçable.
+- [ ] Sorties FIFO par lot, inventaires et corrections par contre-mouvement.
 
 #### Tranche 1B — Recette et coût théorique
 - [x] Recette et produit fini, versions immuables, rendement et unités exactes.
@@ -168,12 +169,12 @@ Une tranche est terminée uniquement si :
 - Adoption : mesures de temps de tâche sur téléphone Android d’entrée de gamme.
 - Données démo : toujours étiquetées ; aucune statistique statique présentée comme réelle.
 
-## 6. État du dernier incrément — Recettes centrales
+## 6. État du dernier incrément — Approvisionnement et coût moyen
 
-La tranche verticale de recette est livrée dans le dépôt : moteur de coût exact, schéma et migration additive, seed baguette, API produits/recettes, versions immuables, activation avec archivage, RBAC, audit et interface responsive avec états réel/démo/chargement/erreur. La référence baguette produit 300 unités à partir de 25 kg de farine, 15 L d’eau, 250 g de levure et 400 g de sel : 13 635 F de matières, 16 635 F de production, 55,45 F par unité et un prix conseillé de 90 F pour 35 % de marge cible.
+La tranche verticale d’approvisionnement est livrée dans le dépôt : fournisseurs, commandes comptant/crédit, réceptions partielles, lots et péremptions, répartition proportionnelle du transport/taxes/frais, mouvements d’achat immuables et recalcul transactionnel du coût moyen pondéré. L’interface responsive relie les commandes, les partenaires, les lots et la valeur du stock, avec états réel/démo/chargement/erreur. Le seed propose une commande de 10 sacs de farine de 50 kg prête à réceptionner.
 
-Les validations locales passent : Prisma, lint, types, tests et builds. L’exécution de la migration et du seed contre Neon reste conditionnée au déploiement sécurisé distant.
+La chaîne métier désormais démontrable est : `fournisseur → achat → réception → lot → stock → coût moyen → nouvelle version de recette`. L’exécution de la migration et du seed contre Neon reste conditionnée au déploiement sécurisé distant.
 
 ## 7. Prochaine décision
 
-Reprendre **P1.2 — fournisseurs, achats, lots et coût moyen pondéré**, afin que les coûts figés dans chaque nouvelle version de recette proviennent d’un historique d’approvisionnement réel. Ensuite, relier recette et production pour comparer coût théorique et coût constaté.
+Construire **P1.5 — ordre de production et coût réel** : sélectionner une recette active, sortir les matières des lots en FIFO, comparer consommation prévue/réelle, entrer les produits finis et valoriser écarts, pertes et invendus.
