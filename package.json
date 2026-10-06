@@ -13,7 +13,7 @@
     "build": "npm run build -w @boul/domain && npm run build -w @boul/api && npm run build -w @boul/web",
     "typecheck": "npm run typecheck -ws --if-present",
     "test": "npm run test -ws --if-present",
-    "lint": "npm run lint -ws --if-present",
+    "lint": "npm run lint -w @boul/web && eslint 'apps/api/src/**/*.ts' 'packages/domain/src/**/*.ts'", 
     "db:generate": "npm run db:generate -w @boul/api",
     "db:validate": "npm run db:validate -w @boul/api",
     "db:migrate": "npm run db:migrate -w @boul/api",
@@ -30,6 +30,8 @@
     "@nestjs/platform-express": "^11.2.7"
   },
   "devDependencies": {
-    "neon": "^8.0.11"
+    "eslint": "^9.39.5",
+    "neon": "^8.0.11",
+    "typescript-eslint": "^8.71.1"
   }
 }

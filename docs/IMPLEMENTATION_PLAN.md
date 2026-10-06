@@ -45,7 +45,7 @@ Une tranche est terminée uniquement si :
 - [ ] P0.3 Authentification, sessions sécurisées, récupération de compte — **en cours : API, sessions et écran de connexion créés**.
 - [ ] P0.4 Organisation, boutique, utilisateurs, RBAC par ressource — **en cours : matrice, guards, périmètres et invitations implémentés**.
 - [x] P0.5 OpenAPI, gestion d’erreurs, logs structurés, health checks.
-- [ ] P0.6 CI : lint, types, tests, build, audit dépendances.
+- [x] P0.6 CI : lint, types, tests, build, audit dépendances.
 - [ ] P0.7 Environnements dev/staging/prod, secrets et sauvegardes.
 
 **Sortie :** un propriétaire crée une organisation et invite un gérant sans fuite inter-tenant.
