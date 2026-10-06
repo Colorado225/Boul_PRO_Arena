@@ -1,11 +1,14 @@
 import {Body,Controller,Get,Post,Req,UseGuards} from '@nestjs/common';
 import type {Request} from 'express';
+import {ApiCookieAuth,ApiTags} from '@nestjs/swagger';
 import {AuthGuard} from '../auth/auth.guard.js';
 import {PermissionsGuard} from '../authorization/permissions.guard.js';
 import {RequirePermissions} from '../authorization/permissions.decorator.js';
 import {InviteUserDto} from './dto/invite-user.dto.js';
 import {OrganizationService} from './organization.service.js';
 
+@ApiTags('organization')
+@ApiCookieAuth('boul_session')
 @Controller('organization')
 @UseGuards(AuthGuard,PermissionsGuard)
 export class OrganizationController{

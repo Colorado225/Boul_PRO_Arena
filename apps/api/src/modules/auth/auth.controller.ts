@@ -1,5 +1,6 @@
 import {Body,Controller,Get,HttpCode,Post,Req,Res,UseGuards} from '@nestjs/common';
 import {Throttle} from '@nestjs/throttler';
+import {ApiCookieAuth,ApiOperation,ApiTags} from '@nestjs/swagger';
 import type {Request,Response} from 'express';
 import {AuthService} from './auth.service.js';
 import {AuthGuard} from './auth.guard.js';
@@ -9,18 +10,19 @@ import {RequestPasswordResetDto} from './dto/request-password-reset.dto.js';
 import {ResetPasswordDto} from './dto/reset-password.dto.js';
 import {AcceptInvitationDto} from './dto/accept-invitation.dto.js';
 
+@ApiTags('auth')
 @Controller('auth')
 export class AuthController{
   constructor(private readonly auth:AuthService){}
 
-  @Post('login') @HttpCode(200) @Throttle({default:{limit:5,ttl:60_000}})
+  @Post('login') @HttpCode(200) @Throttle({default:{limit:5,ttl:60_000}}) @ApiOperation({summary:'Ouvre une session sécurisée'})
   async login(@Body() body:LoginDto,@Req() req:Request,@Res({passthrough:true}) res:Response){
     const result=await this.auth.login(body,{ip:req.ip,userAgent:req.get('user-agent')});
     res.cookie(SESSION_COOKIE,result.token,{httpOnly:true,secure:process.env.NODE_ENV==='production',sameSite:'lax',path:'/',maxAge:SESSION_DURATION_MS});
     return {user:result.principal,expiresAt:result.expiresAt};
   }
 
-  @Get('me') @UseGuards(AuthGuard)
+  @Get('me') @UseGuards(AuthGuard) @ApiCookieAuth('boul_session') @ApiOperation({summary:'Retourne la session active'})
   me(@Req() req:Request){return {user:req.auth}}
 
   @Post('logout') @HttpCode(204)
