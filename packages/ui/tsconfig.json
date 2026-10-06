@@ -1,0 +1,1 @@
+{"extends":"@boul/config/typescript/react-library.json","include":["src/**/*.ts","src/**/*.tsx"]}

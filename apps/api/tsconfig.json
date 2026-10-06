@@ -1,0 +1,5 @@
+{
+  "extends": "@boul/config/typescript/node.json",
+  "compilerOptions": {"outDir":"./dist","rootDir":"./src","emitDecoratorMetadata":true,"experimentalDecorators":true,"declaration":true},
+  "include": ["src/**/*.ts"]
+}

@@ -1,0 +1,1 @@
+{"name":"@boul/ui","version":"0.1.0","private":true,"type":"module","exports":{".":"./src/index.tsx"},"peerDependencies":{"react":"latest"},"devDependencies":{"@boul/config":"*","@types/react":"latest","react":"latest","typescript":"latest"},"scripts":{"typecheck":"tsc --noEmit"}}

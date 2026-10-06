@@ -40,7 +40,7 @@ Une tranche est terminée uniquement si :
 ### Phase 0 — Fondations fiables
 **Objectif :** rendre le dépôt déployable et sécurisé avant d’accumuler les fonctionnalités.
 
-- [ ] P0.1 Monorepo : `apps/web`, `apps/api`, packages `ui`, `domain`, `config`.
+- [x] P0.1 Monorepo : `apps/web`, `apps/api`, packages `ui`, `domain`, `config`.
 - [ ] P0.2 PostgreSQL, Prisma, migrations et seed versionné.
 - [ ] P0.3 Authentification, sessions sécurisées, récupération de compte.
 - [ ] P0.4 Organisation, boutique, utilisateurs, RBAC par ressource.

@@ -9,6 +9,20 @@ npm run dev
 ```
 Puis ouvrir `http://localhost:3000`.
 
+L’API NestJS peut être lancée séparément avec `npm run dev:api` et expose son contrôle de santé sur `http://localhost:3001/api/v1/health`.
+
+## Structure du monorepo
+
+```text
+apps/web       Interface Next.js et PWA
+apps/api       API NestJS et schéma de persistance
+packages/domain  Contrats et règles métier sans framework
+packages/ui      Composants réutilisables
+packages/config  Configuration TypeScript partagée
+```
+
+Les règles de dépendance sont consignées dans `docs/ADR-001-MONOREPO.md`.
+
 ## Inclus dans cette première livraison
 - dashboard dirigeant responsive avec KPI reliés à un jeu de démonstration explicitement signalé ;
 - caisse tactile fonctionnelle (panier, quantités, encaissement, persistance locale) ;
