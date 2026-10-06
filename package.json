@@ -30,7 +30,7 @@
     "@nestjs/platform-express": "^11.2.7"
   },
   "devDependencies": {
-    "eslint": "^9.39.5",
+    "eslint": "^10.12.0",
     "neon": "^8.0.11",
     "typescript-eslint": "^8.71.1"
   }
