@@ -6,7 +6,7 @@ Le MVP répond d’abord aux 7 questions centrales : dépensé, produit, vendu, 
 ## Architecture cible
 - **Web/PWA** : Next.js, React, TypeScript, Tailwind, composants inspirés shadcn/ReUI, Framer Motion.
 - **API métier** : NestJS modulaire, REST/OpenAPI, événements de domaine.
-- **Données** : PostgreSQL + Prisma, montants en entiers XOF ou Decimal pour les ratios.
+- **Données** : Neon PostgreSQL + Prisma, endpoint poolé pour l’API et endpoint direct pour les migrations ; montants en entiers XOF ou Decimal pour les ratios.
 - **Asynchrone** : Redis + BullMQ (rapports, imports, notifications, synchronisation).
 - **Fichiers** : stockage S3 compatible.
 - **Sécurité** : session sécurisée, RBAC par tenant/site/module, journal d’audit, rate limit.

@@ -1,17 +1,229 @@
-generator client { provider = "prisma-client-js" }
-datasource db { provider = "postgresql" url = env("DATABASE_URL") }
+generator client {
+  provider = "prisma-client-js"
+}
 
-enum Role { SUPER_ADMIN OWNER DIRECTOR GENERAL_MANAGER ACCOUNTANT FINANCE_MANAGER STORE_MANAGER PRODUCTION_MANAGER BAKER CASHIER SALES_AGENT PURCHASING_MANAGER STOCK_MANAGER AUDITOR ACCOUNTANT_EXTERNAL READ_ONLY }
-enum MovementType { PURCHASE PRODUCTION_CONSUMPTION PRODUCTION_OUTPUT SALE WASTE TRANSFER_IN TRANSFER_OUT ADJUSTMENT }
-enum SaleStatus { DRAFT COMPLETED VOIDED REFUNDED }
+datasource db {
+  provider  = "postgresql"
+  // Neon pooled endpoint for application traffic.
+  url       = env("DATABASE_URL")
+  // Neon direct endpoint for migrations and administrative operations.
+  directUrl = env("DIRECT_URL")
+}
 
-model Organization { id String @id @default(uuid()) name String currency String @default("XOF") createdAt DateTime @default(now()) updatedAt DateTime @updatedAt deletedAt DateTime? users User[] sites Site[] products Product[] materials RawMaterial[] suppliers Supplier[] }
-model User { id String @id @default(uuid()) organizationId String organization Organization @relation(fields:[organizationId],references:[id]) name String email String role Role isActive Boolean @default(true) createdAt DateTime @default(now()) updatedAt DateTime @updatedAt deletedAt DateTime? @@unique([organizationId,email]) @@index([organizationId]) }
-model Site { id String @id @default(uuid()) organizationId String organization Organization @relation(fields:[organizationId],references:[id]) name String type String timezone String @default("Africa/Abidjan") createdAt DateTime @default(now()) updatedAt DateTime @updatedAt deletedAt DateTime? sales Sale[] movements StockMovement[] }
-model Product { id String @id @default(uuid()) organizationId String organization Organization @relation(fields:[organizationId],references:[id]) sku String name String salePrice Int costPrice Int @default(0) isActive Boolean @default(true) createdAt DateTime @default(now()) updatedAt DateTime @updatedAt deletedAt DateTime? lines SaleLine[] @@unique([organizationId,sku]) @@index([organizationId]) }
-model RawMaterial { id String @id @default(uuid()) organizationId String organization Organization @relation(fields:[organizationId],references:[id]) sku String name String baseUnit String quantity Decimal @default(0) averageCost Decimal @default(0) minimumStock Decimal @default(0) createdAt DateTime @default(now()) updatedAt DateTime @updatedAt deletedAt DateTime? movements StockMovement[] @@unique([organizationId,sku]) }
-model Supplier { id String @id @default(uuid()) organizationId String organization Organization @relation(fields:[organizationId],references:[id]) name String phone String? email String? createdAt DateTime @default(now()) updatedAt DateTime @updatedAt deletedAt DateTime? }
-model Sale { id String @id @default(uuid()) organizationId String siteId String site Site @relation(fields:[siteId],references:[id]) status SaleStatus @default(COMPLETED) total Int paymentMethod String idempotencyKey String @unique createdBy String createdAt DateTime @default(now()) updatedAt DateTime @updatedAt lines SaleLine[] @@index([organizationId,createdAt]) }
-model SaleLine { id String @id @default(uuid()) saleId String sale Sale @relation(fields:[saleId],references:[id],onDelete:Cascade) productId String product Product @relation(fields:[productId],references:[id]) quantity Decimal unitPrice Int unitCost Int createdAt DateTime @default(now()) updatedAt DateTime @updatedAt }
-model StockMovement { id String @id @default(uuid()) organizationId String siteId String site Site @relation(fields:[siteId],references:[id]) materialId String? material RawMaterial? @relation(fields:[materialId],references:[id]) type MovementType quantity Decimal unitCost Decimal referenceType String referenceId String createdBy String createdAt DateTime @default(now()) updatedAt DateTime @updatedAt @@index([organizationId,siteId,createdAt]) }
-model AuditLog { id String @id @default(uuid()) organizationId String actorId String action String entity String entityId String before Json? after Json? ip String? device String? createdAt DateTime @default(now()) updatedAt DateTime @updatedAt @@index([organizationId,createdAt]) }
+enum Role {
+  SUPER_ADMIN
+  OWNER
+  DIRECTOR
+  GENERAL_MANAGER
+  ACCOUNTANT
+  FINANCE_MANAGER
+  STORE_MANAGER
+  PRODUCTION_MANAGER
+  BAKER
+  CASHIER
+  SALES_AGENT
+  PURCHASING_MANAGER
+  STOCK_MANAGER
+  AUDITOR
+  ACCOUNTANT_EXTERNAL
+  READ_ONLY
+}
+
+enum MovementType {
+  PURCHASE
+  PRODUCTION_CONSUMPTION
+  PRODUCTION_OUTPUT
+  SALE
+  WASTE
+  TRANSFER_IN
+  TRANSFER_OUT
+  ADJUSTMENT
+}
+
+enum SaleStatus {
+  DRAFT
+  COMPLETED
+  VOIDED
+  REFUNDED
+}
+
+model Organization {
+  id        String    @id @default(uuid()) @db.Uuid
+  name      String
+  currency  String    @default("XOF")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  users      User[]
+  sites      Site[]
+  products   Product[]
+  materials  RawMaterial[]
+  suppliers  Supplier[]
+  sales      Sale[]
+  movements  StockMovement[]
+  auditLogs  AuditLog[]
+}
+
+model User {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  name           String
+  email          String
+  role           Role
+  isActive       Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  deletedAt      DateTime?
+
+  @@unique([organizationId, email])
+  @@index([organizationId])
+}
+
+model Site {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  name           String
+  type           String
+  timezone       String       @default("Africa/Abidjan")
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  deletedAt      DateTime?
+
+  sales     Sale[]
+  movements StockMovement[]
+
+  @@index([organizationId])
+}
+
+model Product {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  sku            String
+  name           String
+  salePrice      Int
+  costPrice      Int          @default(0)
+  isActive       Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  deletedAt      DateTime?
+
+  lines SaleLine[]
+
+  @@unique([organizationId, sku])
+  @@index([organizationId])
+}
+
+model RawMaterial {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  sku            String
+  name           String
+  baseUnit       String
+  quantity       Decimal      @default(0) @db.Decimal(18, 6)
+  averageCost    Decimal      @default(0) @db.Decimal(18, 6)
+  minimumStock   Decimal      @default(0) @db.Decimal(18, 6)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  deletedAt      DateTime?
+
+  movements StockMovement[]
+
+  @@unique([organizationId, sku])
+  @@index([organizationId])
+}
+
+model Supplier {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  name           String
+  phone          String?
+  email          String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  deletedAt      DateTime?
+
+  @@index([organizationId])
+}
+
+model Sale {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  siteId         String       @db.Uuid
+  site           Site         @relation(fields: [siteId], references: [id])
+  status         SaleStatus   @default(COMPLETED)
+  total          Int
+  paymentMethod  String
+  idempotencyKey String       @unique
+  createdBy      String       @db.Uuid
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  lines SaleLine[]
+
+  @@index([organizationId, createdAt])
+  @@index([organizationId, siteId, createdAt])
+}
+
+model SaleLine {
+  id        String   @id @default(uuid()) @db.Uuid
+  saleId    String   @db.Uuid
+  sale      Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  productId String   @db.Uuid
+  product   Product  @relation(fields: [productId], references: [id])
+  quantity  Decimal  @db.Decimal(18, 6)
+  unitPrice Int
+  unitCost  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([saleId])
+  @@index([productId])
+}
+
+model StockMovement {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  siteId         String       @db.Uuid
+  site           Site         @relation(fields: [siteId], references: [id])
+  materialId     String?      @db.Uuid
+  material       RawMaterial? @relation(fields: [materialId], references: [id])
+  type           MovementType
+  quantity       Decimal      @db.Decimal(18, 6)
+  unitCost       Decimal      @db.Decimal(18, 6)
+  referenceType  String
+  referenceId    String       @db.Uuid
+  createdBy      String       @db.Uuid
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([organizationId, siteId, createdAt])
+  @@index([organizationId, materialId, createdAt])
+  @@index([referenceType, referenceId])
+}
+
+model AuditLog {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  actorId        String       @db.Uuid
+  action         String
+  entity         String
+  entityId       String       @db.Uuid
+  before         Json?
+  after          Json?
+  ip             String?
+  device         String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([organizationId, createdAt])
+  @@index([organizationId, entity, entityId])
+}

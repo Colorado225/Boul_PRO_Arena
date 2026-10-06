@@ -10,7 +10,11 @@
     "build": "npm run build -ws --if-present",
     "typecheck": "npm run typecheck -ws --if-present",
     "test": "npm run test -ws --if-present",
-    "lint": "npm run lint -ws --if-present"
+    "lint": "npm run lint -ws --if-present",
+    "db:generate": "npm run db:generate -w @boul/api",
+    "db:validate": "npm run db:validate -w @boul/api",
+    "db:migrate": "npm run db:migrate -w @boul/api",
+    "db:seed": "npm run db:seed -w @boul/api"
   },
   "engines": { "node": ">=20" }
 }
