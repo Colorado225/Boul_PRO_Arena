@@ -29,6 +29,13 @@ enum Role {
   READ_ONLY
 }
 
+enum UnitDimension {
+  MASS
+  VOLUME
+  COUNT
+  PACKAGE
+}
+
 enum MovementType {
   PURCHASE
   PRODUCTION_CONSUMPTION
@@ -66,6 +73,9 @@ model Organization {
   auditLogs  AuditLog[]
   sessions   Session[]
   invitations UserInvitation[]
+  units        Unit[]
+  unitConversions UnitConversion[]
+  materialCategories MaterialCategory[]
 }
 
 model User {
@@ -128,13 +138,74 @@ model Product {
   @@index([organizationId])
 }
 
+model MaterialCategory {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  deletedAt      DateTime?
+
+  materials RawMaterial[]
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+}
+
+model Unit {
+  id             String        @id @default(uuid()) @db.Uuid
+  organizationId String        @db.Uuid
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  code           String
+  name           String
+  symbol         String
+  dimension      UnitDimension
+  decimalPlaces  Int           @default(3)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  deletedAt      DateTime?
+
+  materialsAsBase     RawMaterial[]  @relation("MaterialBaseUnit")
+  materialsAsPurchase RawMaterial[]  @relation("MaterialPurchaseUnit")
+  conversionsFrom     UnitConversion[] @relation("ConversionFromUnit")
+  conversionsTo       UnitConversion[] @relation("ConversionToUnit")
+
+  @@unique([organizationId, code])
+  @@index([organizationId, dimension])
+}
+
+model UnitConversion {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  fromUnitId     String       @db.Uuid
+  fromUnit       Unit         @relation("ConversionFromUnit", fields: [fromUnitId], references: [id])
+  toUnitId       String       @db.Uuid
+  toUnit         Unit         @relation("ConversionToUnit", fields: [toUnitId], references: [id])
+  factor         Decimal      @db.Decimal(24, 9)
+  materialId     String?      @db.Uuid
+  material       RawMaterial? @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([organizationId, fromUnitId, toUnitId])
+  @@index([materialId])
+}
+
 model RawMaterial {
   id             String       @id @default(uuid()) @db.Uuid
   organizationId String       @db.Uuid
   organization   Organization @relation(fields: [organizationId], references: [id])
   sku            String
   name           String
+  categoryId     String?      @db.Uuid
+  category       MaterialCategory? @relation(fields: [categoryId], references: [id])
   baseUnit       String
+  baseUnitId     String?      @db.Uuid
+  baseUnitRef    Unit?        @relation("MaterialBaseUnit", fields: [baseUnitId], references: [id])
+  purchaseUnitId String?      @db.Uuid
+  purchaseUnit   Unit?        @relation("MaterialPurchaseUnit", fields: [purchaseUnitId], references: [id])
   quantity       Decimal      @default(0) @db.Decimal(18, 6)
   averageCost    Decimal      @default(0) @db.Decimal(18, 6)
   minimumStock   Decimal      @default(0) @db.Decimal(18, 6)
@@ -142,7 +213,8 @@ model RawMaterial {
   updatedAt      DateTime     @updatedAt
   deletedAt      DateTime?
 
-  movements StockMovement[]
+  movements  StockMovement[]
+  conversions UnitConversion[]
 
   @@unique([organizationId, sku])
   @@index([organizationId])

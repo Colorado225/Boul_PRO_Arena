@@ -1,4 +1,5 @@
 export * from './access-control.js';
+export * from './unit-conversion.js';
 
 /** Shared domain contracts. No framework or infrastructure dependency is allowed here. */
 export type TenantId=string;

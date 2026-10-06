@@ -8,9 +8,11 @@ import {AuthModule} from './modules/auth/auth.module.js';
 import {AuthorizationModule} from './modules/authorization/authorization.module.js';
 import {HealthModule} from './modules/health/health.module.js';
 import {OrganizationModule} from './modules/organization/organization.module.js';
+import {UnitsModule} from './modules/units/units.module.js';
+import {MaterialsModule} from './modules/materials/materials.module.js';
 
 @Module({
-  imports:[LoggerModule.forRoot(loggerConfig()),ThrottlerModule.forRoot([{ttl:60_000,limit:120}]),DatabaseModule,HealthModule,AuthModule,AuthorizationModule,OrganizationModule],
+  imports:[LoggerModule.forRoot(loggerConfig()),ThrottlerModule.forRoot([{ttl:60_000,limit:120}]),DatabaseModule,HealthModule,AuthModule,AuthorizationModule,OrganizationModule,UnitsModule,MaterialsModule],
   providers:[{provide:APP_GUARD,useClass:ThrottlerGuard}],
 })
 export class AppModule{}
