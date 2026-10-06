@@ -61,11 +61,13 @@ Une tranche est terminée uniquement si :
 - [ ] Coût moyen pondéré ; stratégie FIFO préparée.
 
 #### Tranche 1B — Recette et coût théorique
-- [ ] Recette versionnée, rendement et pertes prévues.
-- [ ] Coûts matières, emballage, énergie, main-d’œuvre et frais indirects configurables.
-- [ ] Calcul en `Decimal`, politique d’arrondi documentée.
-- [ ] Prix minimum rentable et marge cible.
-- [ ] Explication détaillée de chaque résultat.
+- [x] Recette et produit fini, versions immuables, rendement et unités exactes.
+- [x] Ingrédients avec quantité, unité, coût moyen figé et conversion vers l’unité de base.
+- [x] Temps de préparation/cuisson/repos, température, équipements et instructions.
+- [x] Coût matière, frais de production versionnés, coût unitaire et chaîne de calcul explicable.
+- [x] Calcul en `Decimal`, marge cible et prix conseillé arrondi au palier configurable.
+- [x] Historique, activation/archivage, permissions, audit, API, interface et seed baguette.
+- [ ] Décomposer les frais de production en emballage, énergie, main-d’œuvre, pertes et autres postes configurables.
 
 #### Tranche 1C — Production et coût réel
 - [ ] Ordre de production, consommation réelle, sortie produits finis.
@@ -166,6 +168,12 @@ Une tranche est terminée uniquement si :
 - Adoption : mesures de temps de tâche sur téléphone Android d’entrée de gamme.
 - Données démo : toujours étiquetées ; aucune statistique statique présentée comme réelle.
 
-## 6. Prochaine décision
+## 6. État du dernier incrément — Recettes centrales
 
-Commencer par **P0.1 à P0.3**, puis livrer I1. Le prototype actuel sert de laboratoire UX ; ses composants seront progressivement reliés à l’API réelle plutôt que réécrits sans validation.
+La tranche verticale de recette est livrée dans le dépôt : moteur de coût exact, schéma et migration additive, seed baguette, API produits/recettes, versions immuables, activation avec archivage, RBAC, audit et interface responsive avec états réel/démo/chargement/erreur. La référence baguette produit 300 unités à partir de 25 kg de farine, 15 L d’eau, 250 g de levure et 400 g de sel : 13 635 F de matières, 16 635 F de production, 55,45 F par unité et un prix conseillé de 90 F pour 35 % de marge cible.
+
+Les validations locales passent : Prisma, lint, types, tests et builds. L’exécution de la migration et du seed contre Neon reste conditionnée au déploiement sécurisé distant.
+
+## 7. Prochaine décision
+
+Reprendre **P1.2 — fournisseurs, achats, lots et coût moyen pondéré**, afin que les coûts figés dans chaque nouvelle version de recette proviennent d’un historique d’approvisionnement réel. Ensuite, relier recette et production pour comparer coût théorique et coût constaté.
