@@ -17,12 +17,19 @@
     "db:generate": "npm run db:generate -w @boul/api",
     "db:validate": "npm run db:validate -w @boul/api",
     "db:migrate": "npm run db:migrate -w @boul/api",
-    "db:seed": "npm run db:seed -w @boul/api"
+    "db:seed": "npm run db:seed -w @boul/api",
+    "neon:plan": "neon config plan --project-id curly-rice-23821974 --branch production",
+    "neon:deploy": "neon deploy --project-id curly-rice-23821974 --branch production"
   },
   "engines": {
     "node": ">=20"
   },
   "dependencies": {
+    "@neon/config": "^1.8.4",
+    "@neon/env": "^1.5.1",
     "@nestjs/platform-express": "^11.2.7"
+  },
+  "devDependencies": {
+    "neon": "^8.0.11"
   }
 }

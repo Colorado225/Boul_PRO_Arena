@@ -21,7 +21,7 @@ packages/ui      Composants réutilisables
 packages/config  Configuration TypeScript partagée
 ```
 
-Les règles de dépendance sont consignées dans `docs/ADR-001-MONOREPO.md`. La base cible est **Neon PostgreSQL** avec deux connexions séparées (poolée pour l’API, directe pour les migrations), documentées dans `docs/ADR-002-NEON-DATABASE.md`.
+Les règles de dépendance sont consignées dans `docs/ADR-001-MONOREPO.md`. La base cible est **Neon PostgreSQL** avec deux connexions séparées (poolée pour l’API, directe pour les migrations), documentées dans `docs/ADR-002-NEON-DATABASE.md`. La configuration Neon déclarative et la Function de prévisualisation se trouvent dans `neon.ts` et `hello.ts` (`docs/NEON_PROJECT_SETUP.md`).
 
 ## Inclus dans cette première livraison
 - dashboard dirigeant responsive avec KPI reliés à un jeu de démonstration explicitement signalé ;
