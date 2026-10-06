@@ -16,7 +16,8 @@ Puis ouvrir `http://localhost:3000`.
 - vues production et rapports ;
 - design system premium, mobile-first, composants réutilisables et Framer Motion ;
 - PWA manifest ;
-- architecture cible et schéma Prisma initial.
+- architecture cible et schéma Prisma initial ;
+- plan d’implémentation interactif avec phases, dépendances, statuts et progression persistante (`docs/IMPLEMENTATION_PLAN.md`).
 
 ## Important
 Les données visibles sont celles de **Boulangerie Excellence — Démo**. Elles servent au seed de démonstration demandé et ne sont pas présentées comme réelles. Le prochain incrément branche les écrans sur PostgreSQL/NestJS, ajoute l’authentification multi-tenant et remplace la persistance locale du POS par la file offline idempotente.
